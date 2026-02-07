@@ -1,8 +1,8 @@
-# Data Ingestion & Exploratory Analysis of ChatGPT Reviews
+# Data Ingestion & descriptive Analysis of ChatGPT Reviews
 
-This repository contains the Phase I implementation of a data ingestion and exploratory analysis pipeline for user-generated reviews, developed as part of a broader effort to support scalable sentiment understanding and downstream machine learning workflows.
+This repository contains the implementation of a data ingestion and descriptive analysis pipeline for user-generated reviews, developed as part of a broader effort to support scalable sentiment understanding and downstream machine learning workflows.
 
-The goal of this phase is to establish a reliable entry point for transforming raw, public web data into structured, analyzable artifacts that can support labeling, modeling, and iterative analysis.
+The goal is to establish a reliable entry point for transforming raw, public web data into structured, analyzable artifacts that can support labeling, modeling, and iterative analysis.
 
 ---
 
@@ -25,7 +25,7 @@ This work aligns with the objectives outlined in the project brief for the data 
 - **Platform:** Google Play Store  
 - **Application:** ChatGPT  
 - **Data type:** User reviews with ratings, timestamps, and textual feedback  
-- **Scale:** ~100,000 unique reviews  
+- **Scale:** ~1000,000 unique reviews  
 - **Time coverage:** Approximately one month of recent data  
 
 Google Play was selected due to its public accessibility, stable structure, and sufficient volume of user-generated content, making it suitable for automated ingestion and structured analysis.
@@ -53,9 +53,9 @@ Raw review data files are intentionally excluded from version control to keep th
 
 ---
 
-## Exploratory Analysis Summary
+## Descriptive Analysis Summary
 
-The exploratory data analysis focuses on three core aspects:
+The descriptive data analysis focuses on three core aspects:
 
 ### 1. Rating Distribution
 User ratings are heavily right-skewed, with a majority of 5-star reviews. However, a substantial number of lower-rated reviews (1–3 stars) are present, providing meaningful signal for qualitative analysis and issue discovery.
