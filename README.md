@@ -32,27 +32,6 @@ Google Play was selected due to its public accessibility, stable structure, and 
 
 ---
 
-## Repository Structure
-
-.
-├── data_collection/
-│ └── google_chatgpt.py # Automated script for collecting reviews
-│
-├── analysis/
-│ └── DQ_check.ipynb # Exploratory data analysis and data quality checks
-│
-├── figures/
-│ ├── ratings.png # Rating distribution
-│ ├── review length.png # Review length distribution
-│ └── daily volumn.png # Daily review volume over time
-│
-├── .gitignore # Excludes raw data files (e.g., CSVs)
-└── README.md
-
-Raw review data files are intentionally excluded from version control to keep the repository lightweight and focused on reproducible code and analysis.
-
----
-
 ## Descriptive Analysis Summary
 
 The descriptive data analysis focuses on three core aspects:
