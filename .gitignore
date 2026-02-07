@@ -1,0 +1,9 @@
+# data files
+*.csv
+
+# jupyter
+.ipynb_checkpoints/
+
+# system
+.DS_Store
+Thumbs.db
