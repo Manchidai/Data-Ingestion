@@ -1,5 +1,6 @@
 # data files
 *.csv
+reviews.db
 
 # jupyter
 .ipynb_checkpoints/
@@ -7,3 +8,4 @@
 # system
 .DS_Store
 Thumbs.db
+__pycache__/
