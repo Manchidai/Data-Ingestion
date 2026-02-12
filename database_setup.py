@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     FOREIGN KEY (app_id) REFERENCES apps(app_id)
 );
 """)
-# 创建索引
+# Creat Index
 cursor.execute("""
 CREATE INDEX IF NOT EXISTS idx_reviews_app_id
 ON reviews(app_id);
