@@ -1,62 +1,131 @@
-# Data Ingestion & descriptive Analysis of ChatGPT Reviews
+# Data Ingestion & SQL Infrastructure for ChatGPT Reviews
 
-This repository contains the implementation of a data ingestion and descriptive analysis pipeline for user-generated reviews, developed as part of a broader effort to support scalable sentiment understanding and downstream machine learning workflows.
+This repository implements the foundational data ingestion and infrastructure layer for collecting, structuring, and storing large-scale user-generated reviews from public web sources.
 
-The goal is to establish a reliable entry point for transforming raw, public web data into structured, analyzable artifacts that can support labeling, modeling, and iterative analysis.
+The objective of this phase is not only to perform descriptive analysis, but to design a reusable and scalable SQL-based ingestion system that supports downstream sentiment modeling, labeling workflows, and iterative experimentation.
 
 ---
 
-## Project Context
+## Project Objective
 
-Understanding user sentiment at scale requires more than isolated classification models. It depends on a robust data foundation that can continuously collect, clean, structure, and store user feedback in a reusable and extensible way.
+To build a modular and automated data pipeline that:
 
-This project focuses on building that foundational layer by:
-- identifying a suitable public data source,
-- automating data collection,
-- performing basic data quality checks and exploratory analysis, and
-- documenting findings and limitations for downstream use.
+- Collects public user review data
+- Cleans and structures semi-structured text content
+- Stores the data in a relational SQL database
+- Enables scalable querying and downstream NLP tasks
 
-This work aligns with the objectives outlined in the project brief for the data ingestion and infrastructure phase. :contentReference[oaicite:0]{index=0}
+This work aligns with the Phase I objective of establishing a reliable infrastructure layer for future AI-driven sentiment analysis systems.
 
 ---
 
 ## Data Source
 
-- **Platform:** Google Play Store  
-- **Application:** ChatGPT  
-- **Data type:** User reviews with ratings, timestamps, and textual feedback  
-- **Scale:** ~1000,000 unique reviews  
-- **Time coverage:** Approximately one month of recent data  
+Platform: Google Play Store  
+Application: ChatGPT  
+Data Type: User reviews including rating, timestamp, text content, and metadata  
+Scale: ~100,000 unique reviews  
+Time Coverage: Approximately one month of recent data  
 
-Google Play was selected due to its public accessibility, stable structure, and sufficient volume of user-generated content, making it suitable for automated ingestion and structured analysis.
+Google Play was selected due to its public accessibility, stable structure, and sufficient review volume.
+
+---
+
+##  SQL Schema & Automated Ingestion
+
+### Database Design
+
+Two relational tables are implemented:
+
+apps table:
+- app_id (Primary Key)
+- app_name
+- platform
+
+reviews table:
+- review_id (Primary Key)
+- app_id (Foreign Key referencing apps.app_id)
+- user_name (nullable)
+- rating
+- content
+- thumbs_up
+- review_date (ISO 8601 formatted)
+- app_version
+
+Design considerations:
+- Primary and foreign key relationships enforce structural integrity.
+- Nullable fields account for platform-level data variability.
+- The schema supports future multi-application expansion.
+- Timestamps are normalized for consistency.
+
+---
+
+## Automated Ingestion Pipeline
+
+The ingestion process is fully automated via:
+
+run_pipeline.py
+
+The pipeline performs:
+
+1. Database initialization (table and index creation)
+2. CSV ingestion
+3. Timestamp normalization
+4. Bulk insertion into SQLite
+5. Record count verification
+
+To execute:
+
+python run_pipeline.py
+
+This generates a SQLite database file named:
+
+reviews.db
+
+---
+
+## Indexing for Performance
+
+Indexes are created on:
+
+- reviews.app_id
+- reviews.review_date
+- reviews.rating
+
+These indexes ensure efficient filtering by application, time range, and rating category.
 
 ---
 
 ## Descriptive Analysis Summary
 
-The descriptive data analysis focuses on three core aspects:
+Basic descriptive analysis was conducted to validate dataset quality.
 
-### 1. Rating Distribution
-User ratings are heavily right-skewed, with a majority of 5-star reviews. However, a substantial number of lower-rated reviews (1–3 stars) are present, providing meaningful signal for qualitative analysis and issue discovery.
+Rating Distribution:
+The dataset is right-skewed, with a majority of 5-star reviews while preserving lower-rated feedback for qualitative analysis.
 
-### 2. Review Length Distribution
-Review text lengths exhibit a long-tailed distribution. While most reviews are brief, a subset contains detailed feedback that is particularly valuable for downstream tasks such as topic modeling or complaint analysis.
+Review Length Distribution:
+Review lengths exhibit a long-tailed pattern, indicating the presence of detailed feedback suitable for downstream NLP tasks.
 
-### 3. Temporal Trends
-Daily review volume remains relatively stable across the observed period, indicating consistent data collection without major gaps. A decline on the final day reflects partial-day data rather than a pipeline issue.
-
----
-
-## Data Quality Considerations
-
-- No duplicate review identifiers were observed.
-- Critical fields such as ratings, timestamps, and review text are nearly complete.
-- Missing values are limited to non-essential metadata fields (e.g., app version).
-- The primary limitation of the dataset is limited historical coverage, which constrains long-term trend analysis.
+Temporal Trends:
+Daily review counts remain stable across the observed period, suggesting consistent ingestion.
 
 ---
 
+## Data Quality Summary
+
+- No duplicate review identifiers detected
+- Core fields (rating, content, timestamp) largely complete
+- Missing values limited to non-essential metadata
+- Dataset structure suitable for NLP modeling
+
+---
 
 ## Notes
 
-This repository is intended to serve as a clean, reproducible foundation for downstream sentiment analysis and modeling rather than a one-off exploratory exercise.
+- Raw CSV files and SQLite database files are excluded from version control.
+- The system is designed as a scalable entry point for AI-based sentiment modeling.
+- The architecture supports future expansion to additional platforms.
+
+---
+
+This repository represents the completion of Phase I: Data Ingestion & Infrastructure.
