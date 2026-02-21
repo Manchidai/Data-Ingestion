@@ -1,5 +1,8 @@
+from numpy import rint
 import pandas as pd
 import sqlite3
+from datetime import datetime
+import time
 
 DB_PATH = "reviews.db"
 CSV_PATH = "google_play_chatgpt_reviews.csv"
@@ -84,9 +87,37 @@ def load_data(conn):
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, records)
 
+    inserted_rows = cursor.rowcount
+    attempted_rows = len(records)
+    duplicate_rows = attempted_rows - inserted_rows
+
+    # ---- Missing field ratios ----
+    missing_rating = sum(1 for r in records if r[3] is None)
+    missing_content = sum(1 for r in records if r[4] is None)
+    missing_review_date = sum(1 for r in records if r[6] is None)
+
+    missing_rating_ratio = missing_rating / attempted_rows if attempted_rows else 0
+    missing_content_ratio = missing_content / attempted_rows if attempted_rows else 0
+    missing_review_date_ratio = missing_review_date / attempted_rows if attempted_rows else 0
+
+    print(f"Missing rating ratio: {missing_rating_ratio:.4f}")
+    print(f"Missing content ratio: {missing_content_ratio:.4f}")
+    print(f"Missing review_date ratio: {missing_review_date_ratio:.4f}")
+
     conn.commit()
 
-    print(f"{len(records)} reviews loaded.")
+    print(f"Attempted: {attempted_rows}")
+    print(f"Inserted: {inserted_rows}")
+    print(f"Duplicates: {duplicate_rows}")
+
+    return (
+    attempted_rows,
+    inserted_rows,
+    duplicate_rows,
+    missing_rating_ratio,
+    missing_content_ratio,
+    missing_review_date_ratio
+)
 
 
 def verify(conn):
@@ -101,9 +132,74 @@ def verify(conn):
 def main():
     conn = sqlite3.connect(DB_PATH)
 
+    cursor = conn.cursor()
+
+    start_time = time.time()
+    started_at = datetime.now().isoformat()
+
+    cursor.execute("""
+        INSERT INTO pipeline_runs (run_key, source, started_at, status)
+        VALUES (?, ?, ?, ?)
+    """, (
+        f"run_{int(start_time)}",
+        "google_play",
+        started_at,
+        "running"
+    ))
+
+    run_id = cursor.lastrowid
+    conn.commit()
+
     setup_database(conn)
-    load_data(conn)
+    (
+    attempted_rows,
+    inserted_rows,
+    duplicate_rows,
+    missing_rating_ratio,
+    missing_content_ratio,
+    missing_review_date_ratio
+    ) = load_data(conn)
     verify(conn)
+
+    finished_at = datetime.now().isoformat()
+    duration = time.time() - start_time
+
+    # ---- Anomaly Detection ----
+    duplicate_ratio = duplicate_rows / attempted_rows if attempted_rows else 0
+
+    final_status = "success"
+
+    if inserted_rows == 0 and attempted_rows > 0:
+        final_status = "warning_zero_insert"
+
+    elif duplicate_ratio > 0.9:
+        final_status = "warning_high_duplicate"
+
+    cursor.execute("""
+        UPDATE pipeline_runs
+        SET status = ?, 
+            finished_at = ?, 
+            duration_sec = ?, 
+            attempted_rows = ?, 
+            inserted_rows = ?, 
+            duplicate_rows = ?,
+            missing_rating_ratio = ?,
+            missing_content_ratio = ?,
+            missing_review_date_ratio = ?
+        WHERE run_id = ?
+    """, (
+        final_status,
+        finished_at,
+        duration,
+        attempted_rows,
+        inserted_rows,
+        duplicate_rows,
+        missing_rating_ratio,
+        missing_content_ratio,
+        missing_review_date_ratio,
+        run_id
+    ))
+    conn.commit()
 
     conn.close()
 
