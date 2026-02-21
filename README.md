@@ -86,13 +86,14 @@ run_pipeline.py
 
 The pipeline performs the following steps:
 
-1. Database initialization
-2. CSV ingestion
-3. Timestamp normalization
-4. Bulk insertion using idempotent INSERT OR IGNORE logic
-5. Record count verification
-6. Run-level metric computation
-7. Monitoring status update
+1. Database initialization  
+2. CSV ingestion  
+3. Timestamp normalization  
+4. Bulk insertion using idempotent INSERT OR IGNORE logic  
+5. Record count verification  
+6. Run-level metric computation (row counts, duplicate ratio, missing field ratios)  
+7. Anomaly detection (zero insert / high duplicate ratio)  
+8. Monitoring status update and structured run summary output
 
 
 ---
