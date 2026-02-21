@@ -201,8 +201,22 @@ def main():
     ))
     conn.commit()
 
+    print("\n================ RUN SUMMARY ================")
+    print(f"Run ID: {run_id}")
+    print(f"Status: {final_status}")
+    print(f"Duration (sec): {duration:.2f}")
+
+    print(f"\nRows Attempted: {attempted_rows}")
+    print(f"Rows Inserted: {inserted_rows}")
+    print(f"Duplicate Rows: {duplicate_rows}")
+
+    print(f"\nMissing Rating Ratio: {missing_rating_ratio:.4f}")
+    print(f"Missing Content Ratio: {missing_content_ratio:.4f}")
+    print(f"Missing Review Date Ratio: {missing_review_date_ratio:.4f}")
+
+    print("============================================\n")
+
     conn.close()
-
-
+    
 if __name__ == "__main__":
     main()
