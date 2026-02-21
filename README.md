@@ -1,21 +1,23 @@
-# Data Ingestion & SQL Infrastructure for ChatGPT Reviews
+# Data Ingestion & Monitored SQL Infrastructure for ChatGPT Reviews
 
-This repository implements the foundational data ingestion and infrastructure layer for collecting, structuring, and storing large-scale user-generated reviews from public web sources.
+This repository implements a modular, SQL-based data ingestion system for collecting, structuring, and persistently storing large-scale user-generated reviews from public web sources.
 
-The objective of this phase is not only to perform descriptive analysis, but to design a reusable and scalable SQL-based ingestion system that supports downstream sentiment modeling, labeling workflows, and iterative experimentation.
+Beyond basic ingestion, the system includes a lightweight automated monitoring layer that enables the pipeline to observe and validate its own execution behavior.
+
 
 ---
 
 ## Project Objective
 
-To build a modular and automated data pipeline that:
+To design a reusable and scalable data ingestion system that:
 
 - Collects public user review data
 - Cleans and structures semi-structured text content
 - Stores the data in a relational SQL database
-- Enables scalable querying and downstream NLP tasks
+- Enables scalable querying for downstream NLP tasks
+- Automatically monitors ingestion quality and execution health
 
-This work aligns with the Phase I objective of establishing a reliable infrastructure layer for future AI-driven sentiment analysis systems.
+The goal is to build a robust infrastructure layer that supports future AI-driven sentiment modeling and experimentation.
 
 ---
 
@@ -24,25 +26,24 @@ This work aligns with the Phase I objective of establishing a reliable infrastru
 Platform: Google Play Store  
 Application: ChatGPT  
 Data Type: User reviews including rating, timestamp, text content, and metadata  
-Scale: ~100,000 unique reviews  
-Time Coverage: Approximately one month of recent data  
+Scale: Approximately 100,000 unique reviews  
 
 Google Play was selected due to its public accessibility, stable structure, and sufficient review volume.
 
 ---
 
-##  SQL Schema & Automated Ingestion
+## SQL Schema Design
 
-### Database Design
+Three relational tables are implemented:
 
-Two relational tables are implemented:
+### apps
 
-apps table:
 - app_id (Primary Key)
 - app_name
 - platform
 
-reviews table:
+### reviews
+
 - review_id (Primary Key)
 - app_id (Foreign Key referencing apps.app_id)
 - user_name (nullable)
@@ -52,39 +53,76 @@ reviews table:
 - review_date (ISO 8601 formatted)
 - app_version
 
+### pipeline_runs (Monitoring Layer)
+
+- run_id (Primary Key)
+- run_key
+- source
+- started_at
+- finished_at
+- status
+- attempted_rows
+- inserted_rows
+- duplicate_rows
+- duration_sec
+- missing_rating_ratio
+- missing_content_ratio
+- missing_review_date_ratio
+
 Design considerations:
-- Primary and foreign key relationships enforce structural integrity.
-- Nullable fields account for platform-level data variability.
-- The schema supports future multi-application expansion.
+
+- Primary and foreign key constraints enforce relational integrity.
+- Nullable fields accommodate platform-level variability.
 - Timestamps are normalized for consistency.
+- Monitoring metadata is stored per run to ensure auditability.
 
 ---
 
 ## Automated Ingestion Pipeline
 
-The ingestion process is fully automated via:
+The ingestion workflow is implemented in:
 
 run_pipeline.py
 
-The pipeline performs:
+The pipeline performs the following steps:
 
-1. Database initialization (table and index creation)
+1. Database initialization
 2. CSV ingestion
 3. Timestamp normalization
-4. Bulk insertion into SQLite
+4. Bulk insertion using idempotent INSERT OR IGNORE logic
 5. Record count verification
+6. Run-level metric computation
+7. Monitoring status update
 
-To execute:
-
-python run_pipeline.py
-
-This generates a SQLite database file named:
-
-reviews.db
 
 ---
 
-## Indexing for Performance
+## Lightweight Monitoring Layer
+
+Each pipeline run automatically records:
+
+- Whether the run succeeded or triggered a warning
+- Total rows attempted
+- Rows successfully inserted
+- Duplicate counts
+- Missing field ratios
+- Execution duration
+
+### Anomaly Detection Rules
+
+The system flags abnormal runs under the following conditions:
+
+- warning_zero_insert  
+  Triggered when inserted_rows equals zero while attempted_rows is greater than zero.
+
+- warning_high_duplicate  
+  Triggered when duplicate ratio exceeds 0.9.
+
+This allows the ingestion system to detect potential upstream data changes or ingestion failures.
+
+---
+
+## Indexing Strategy
 
 Indexes are created on:
 
@@ -92,40 +130,38 @@ Indexes are created on:
 - reviews.review_date
 - reviews.rating
 
-These indexes ensure efficient filtering by application, time range, and rating category.
-
----
-
-## Descriptive Analysis Summary
-
-Basic descriptive analysis was conducted to validate dataset quality.
-
-Rating Distribution:
-The dataset is right-skewed, with a majority of 5-star reviews while preserving lower-rated feedback for qualitative analysis.
-
-Review Length Distribution:
-Review lengths exhibit a long-tailed pattern, indicating the presence of detailed feedback suitable for downstream NLP tasks.
-
-Temporal Trends:
-Daily review counts remain stable across the observed period, suggesting consistent ingestion.
+These indexes ensure efficient filtering by application, time window, and rating category.
 
 ---
 
 ## Data Quality Summary
 
-- No duplicate review identifiers detected
-- Core fields (rating, content, timestamp) largely complete
-- Missing values limited to non-essential metadata
-- Dataset structure suitable for NLP modeling
+Observed dataset characteristics:
+
+- No duplicate primary keys
+- Core fields largely complete
+- Missing ratios near zero for essential attributes
+- Stable ingestion behavior across runs
+- Idempotent execution verified
+
+---
+
+## Engineering Properties
+
+The system now supports:
+
+- Idempotent ingestion
+- Structured relational storage
+- Run-level observability
+- Automated data quality validation
+- Lightweight anomaly detection
+
+This moves the pipeline from simple automation to a self-monitoring ingestion system.
 
 ---
 
 ## Notes
 
-- Raw CSV files and SQLite database files are excluded from version control.
-- The system is designed as a scalable entry point for AI-based sentiment modeling.
-- The architecture supports future expansion to additional platforms.
-
----
-
-This repository represents the completion of Phase I: Data Ingestion & Infrastructure.
+- Raw CSV files and the SQLite database file are excluded from version control.
+- The architecture is extensible to additional applications and platforms.
+- Designed as a scalable entry point for AI-based sentiment modeling systems.
